@@ -1,0 +1,12 @@
+{% import "components/form/fields_macros.html.twig" as fields %}
+
+
+{{ fields.dropdownField(
+    'Computer',
+    'items_id',
+    owned_computer_id,
+    __('Add a computer')
+) }}
+<input type="hidden" name="plugin_myplugin_superassets_id" value="{{ plugin_myplugin_superassets_id }}">
+<input type="hidden" name="itemtype" value="Computer">
+<input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
