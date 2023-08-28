@@ -66,9 +66,9 @@ function plugin_init_myplugin()
 
     // callback a class method
     $PLUGIN_HOOKS['item_add']['myplugin'] = [
-         'Computer' => [
-              GlpiPlugin\Myplugin\Superasset::class, 'computerUpdated'
-         ]
+        'Computer' => [
+            GlpiPlugin\Myplugin\Superasset::class, 'computerUpdated'
+        ]
     ];
 
     $PLUGIN_HOOKS['pre_item_purge']['myplugin'] = [
@@ -76,6 +76,7 @@ function plugin_init_myplugin()
             GlpiPlugin\Myplugin\Superasset::class, 'computerPurged'
         ]
     ];
+
 
     Plugin::registerClass(GlpiPlugin\Myplugin\Superasset_Item::class, [
         'addtabon' => 'Computer'
@@ -86,13 +87,41 @@ function plugin_init_myplugin()
     $PLUGIN_HOOKS['add_javascript']['myplugin'] = [
         'js/common.js',
     ];
-    vdfdbfd
 
     // on ticket page (in edition)
-    if (strpos($_SERVER['REQUEST_URI'], "ticket.form.php") !== false
-        && isset($_GET['id'])) {
+    if (
+        strpos($_SERVER['REQUEST_URI'], "ticket.form.php") !== false
+        && isset($_GET['id'])
+    ) {
         $PLUGIN_HOOKS['add_javascript']['myplugin'][] = 'js/ticket.js.php';
     }
+
+    $PLUGIN_HOOKS['pre_item_form']['myplugin'] = [
+        GlpiPlugin\Myplugin\Superasset::class, 'preItemFormComputer'
+    ];
+
+    Plugin::registerClass(GlpiPlugin\Myplugin\Config::class, [
+        'addtabon' => 'Config'
+    ]);
+
+    \Plugin::registerClass(GlpiPlugin\Myplugin\Profile::class, [
+        'addtabon' => \Profile::class
+    ]);
+
+    $PLUGIN_HOOKS['use_massive_action']['myplugin'] = 1;
+
+    \Plugin::registerClass(GlpiPlugin\Myplugin\Superasset::class, [
+        'notificationtemplates_types' => true
+    ]);
+
+    $PLUGIN_HOOKS['dashboard_types']['myplugin'] = [
+        GlpiPlugin\Myplugin\Dashboard::class => 'getTypes',
+    ];
+
+    // add new cards to the dashboard
+    $PLUGIN_HOOKS['dashboard_cards']['myplugin'] = [
+        GlpiPlugin\Myplugin\Dashboard::class => 'getCards',
+    ];
 }
 
 

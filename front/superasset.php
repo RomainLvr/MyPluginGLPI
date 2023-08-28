@@ -1,4 +1,6 @@
 <?php
+
+use Glpi\Dashboard\Grid;
 use GlpiPlugin\Myplugin\Superasset;
 
 include ('../../../inc/includes.php');

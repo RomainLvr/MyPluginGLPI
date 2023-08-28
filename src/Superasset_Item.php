@@ -12,7 +12,7 @@ class Superasset_Item extends CommonDBTM
 {
 
     // right management, we'll change this later
-    static $rightname = 'computer';
+    static $rightname = 'myplugin::superasset';
 
     static function getTypeName($nb = 0)
     {

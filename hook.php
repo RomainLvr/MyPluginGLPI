@@ -30,6 +30,7 @@
  */
 
 use GlpiPlugin\Myplugin\Superasset;
+use GlpiPlugin\Myplugin\Superasset_Item;
 
 /**
  * Plugin install process
@@ -39,7 +40,7 @@ use GlpiPlugin\Myplugin\Superasset;
 function plugin_myplugin_install()
 {
     global $DB;
-   
+
     $default_charset   = DBConnection::getDefaultCharset();
     $default_collation = DBConnection::getDefaultCollation();
 
@@ -62,7 +63,7 @@ function plugin_myplugin_install()
         $DB->queryOrDie($query, $DB->error());
     }
     // Set the migration for the table update
-    else{
+    else {
         // $migration->addField(
         //     $table,
         //     'fieldname',
@@ -75,7 +76,7 @@ function plugin_myplugin_install()
         //     'fieldname'
         // );
     }
-    if(!$DB->tableExists($itemsTable)){
+    if (!$DB->tableExists($itemsTable)) {
         $query = "CREATE TABLE `$itemsTable` (
             `id`         int unsigned NOT NULL AUTO_INCREMENT,
             `plugin_myplugin_superassets_id` int unsigned NOT NULL,
@@ -100,6 +101,27 @@ function plugin_myplugin_install()
     //     Superasset::class,
     // ), true);
 
+
+    \Config::setConfigurationValues('plugin:myplugin', [
+        'myplugin_computer_tab' => 1,
+        'myplugin_computer_form' => 1,
+    ]);
+
+    // add rights to current profile
+    foreach (GlpiPlugin\Myplugin\Profile::getAllRights() as $right) {
+        \ProfileRight::addProfileRights([$right['field']]);
+    }
+
+    \CronTask::register(
+        'PluginMypluginSuperasset',
+        'myaction',
+        HOUR_TIMESTAMP,
+        [
+            'comment'   => '',
+            'mode'      => \CronTask::MODE_EXTERNAL
+        ]
+    );
+
     return true;
 }
 
@@ -119,6 +141,13 @@ function plugin_myplugin_uninstall()
     //     Superasset::class,
     // ), false, true, true);
 
+    $config = new \Config();
+    $config->deleteByCriteria(['context' => 'plugin:myplugin']);
+
+    foreach (GlpiPlugin\Myplugin\Profile::getAllRights() as $right) {
+        \ProfileRight::deleteProfileRights([$right['field']]);
+    }
+
     global $DB;
 
     $tables = [
@@ -135,7 +164,7 @@ function plugin_myplugin_uninstall()
         }
     }
 
-   return true;
+    return true;
 }
 
 function plugin_myplugin_getAddSearchOptionsNew($itemtype)
@@ -165,8 +194,9 @@ function plugin_myplugin_getAddSearchOptionsNew($itemtype)
     return $sopt;
 }
 
-function mypluginPreItemUpdate(CommonDBTM $item){
-    if($item::getType() == Superasset::getType()){
+function mypluginPreItemUpdate(CommonDBTM $item)
+{
+    if ($item::getType() == Superasset::getType()) {
         $item->prepareInputForUpdate($item->input);
     }
 
@@ -184,16 +214,29 @@ function hookCallback(\CommonDBTM $item)
         \Session::addMessageAfterRedirect('Action forbidden because...');
 
         return;
-   }
+    }
 }
 
-/*
-    Utilisez un hook interceptant la suppression définitive (purge) d’un ordinateur pour vérifier que des lignes de nos objets y sont associées et les supprimer également dans ce cas.
-    */
-function computerPurged(CommonDBTM $item){
-    if($item::getType() == Computer::getType()){
+function computerPurged(CommonDBTM $item)
+{
+    if ($item::getType() == Computer::getType()) {
         $superassets = new Superasset();
         $superassets->getFromDB($item->fields['id']);
         $superassets->delete($item->fields['id']);
     }
+}
+
+function plugin_myplugin_MassiveActions($type)
+{
+   $actions = [];
+   switch ($type) {
+      case \Computer::class:
+         $class = GlpiPlugin\Myplugin\Superasset::class;
+         $key   = 'addSuperAsset';
+         $label = __("Add SuperAsset", 'myplugin');
+         $actions[$class.\MassiveAction::CLASS_ACTION_SEPARATOR.$key] = $label;
+
+         break;
+   }
+   return $actions;
 }

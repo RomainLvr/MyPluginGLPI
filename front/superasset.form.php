@@ -1,5 +1,6 @@
 <?php
 
+use GlpiPlugin\Myplugin\NotificationTargetSuperasset;
 use GlpiPlugin\Myplugin\Superasset;
 use GlpiPlugin\Myplugin\Superasset_Item;
 
@@ -10,6 +11,21 @@ $superasset_item = new Superasset_Item();
 
 if (isset($_POST["add"])) {
     $newID = $supperasset->add($_POST);
+
+    /*
+    Nous pouvons par contre déclencher l’exécution d’une notification via le code suivant:
+
+    \NotificationEvent::raiseEvent($event, $item);
+
+    La clef ‘event’ correspond au nom de l’événement déclencheur défini dans l’objet Notification et la clef ‘itemtype’ l’objet auquel il se rapporte.
+    Ainsi, cette fonction raiseEvent cherchera dans la table glpi_notifications une ligne active avec ces 2 caractéristiques.
+    */
+    $event = 'PluginMypluginSuperassetCreated';
+    $item = $supperasset;
+    \NotificationEvent::raiseEvent($event, $item);
+
+    Toolbox::logDebug("Superasset created: " . $newID);
+
 
     if ($_SESSION['glpibackcreated']) {
         \Html::redirect(Superasset::getFormURL() . "?id=" . $newID);
